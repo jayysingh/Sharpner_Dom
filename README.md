@@ -1,2 +1,5 @@
 # Sharpner_Dom
-This repo contains Dom Module solutions
+
+<p>you will find solution of sharpners dom manupulation module solution here </p>
+
+Author Jay Singh
