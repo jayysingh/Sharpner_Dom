@@ -1,0 +1,38 @@
+const http = require('http');
+
+const server = http.createServer((req, res) => {
+    const url = req.url;
+    const method = req.method;
+
+    if (url === "/") {
+        // Create the form by setting the headers
+        res.setHeader('Content-Type', 'text/html');
+        res.end(`
+            <form action="/message" method="POST">
+                <label>Name:</label>
+                <input type="text" name="userName"></input>
+                <button type="submit">Add</button>
+            </form>
+        `);
+    } else if (url === "/message" && method === "POST") {
+       
+        const body = [];
+        req.on('data', (chunk) => {
+            body.push(chunk);
+        });
+
+        req.on('end', () => {
+            const parsedBody = Buffer.concat(body).toString();
+            console.log("Form Data:", parsedBody);                      
+            res.setHeader('Content-Type', 'text/html');
+            res.end("<h1>Form submitted successfully! Hello from /message page</h1>");
+        });
+    } else {
+        res.setHeader('Content-Type', 'text/html');
+        res.end("<h1>Page not found</h1>");
+    }
+});
+
+server.listen(3000, () => {
+    console.log("Server is running on http://localhost:3000");
+});
