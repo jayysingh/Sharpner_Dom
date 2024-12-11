@@ -1,0 +1,79 @@
+const http = require('http');
+const fs = require('fs');
+const querystring = require('querystring');
+
+const PORT = 3000;
+const DATA_FILE = 'messages.txt';
+
+const readMessages = () => {
+  if (!fs.existsSync(DATA_FILE)) return [];
+  return fs.readFileSync(DATA_FILE, 'utf-8').split('\n').filter(Boolean);
+};
+
+const saveMessage = (message) => {
+  fs.appendFileSync(DATA_FILE, message + '\n');
+};
+
+const server = http.createServer((req, res) => {
+  if (req.method === 'GET') {
+    const messages = readMessages();
+    const lastMessage = messages[messages.length - 1] || 'No message yet!';
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Input and Label</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+          }
+          input, button {
+            padding: 10px;
+            font-size: 16px;
+          }
+          label {
+            display: block;
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Message Input</h1>
+        <form method="POST" action="/">
+          <input type="text" name="message" placeholder="Enter a message" required />
+          <button type="submit">Send</button>
+        </form>
+        <label>${lastMessage}</label>
+      </body>
+      </html>
+    `);
+  } else if (req.method === 'POST') {
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      const parsedData = querystring.parse(body);
+      const message = parsedData.message.trim();
+      if (message) {
+        saveMessage(message);
+      }
+      res.writeHead(302, { Location: '/' });
+      res.end();
+    });
+  } else {
+    res.writeHead(405, { 'Content-Type': 'text/plain' });
+    res.end('Method Not Allowed');
+  }
+});
+
+server.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});
